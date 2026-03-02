@@ -15,12 +15,8 @@ export const scheduleMenu: dashBoardMenu = [
     icon: Clock,
     items: [
       {
-        title: "Simple Schedule",
-        url: "/simple",
-      },
-      {
-        title: "Cron Schedule",
-        url: "#",
+        title: "Schedule Configuration",
+        url: "/create-schedule",
       },
       {
         title: "Active Schedules",

@@ -4,8 +4,8 @@ import ErrorPage from "@/pages/ErrorPage.tsx";
 import Home from "@/pages/Home.tsx";
 import {Suspense} from "react";
 import JobList from "@/pages/schedule/JobList.tsx";
-import CreateSimpleSchedule from "@/pages/schedule/CreateSimpleSchedule.tsx";
 import ActiveScheduleList from "@/pages/schedule/ActiveScheduleList.tsx";
+import ScheduleConfigurationPage from "@/pages/schedule/ScheduleConfigurationPage.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -26,8 +26,8 @@ export const router = createBrowserRouter([
         )
       },
       {
-        path: '/simple',
-        Component: CreateSimpleSchedule
+        path: '/create-schedule',
+        Component: ScheduleConfigurationPage
       },
       {
         path: '/active-schedules',

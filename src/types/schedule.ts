@@ -16,6 +16,8 @@ export interface TriggerDataMap {
   [key: string]: string | undefined;
 }
 
+export type ScheduleType = "Cron" | "Simple";
+
 export interface ScheduleItem {
   jobGroup: string;
   jobName: string;
@@ -36,4 +38,20 @@ export interface ScheduleItem {
 
 export interface ScheduleItemWithAction extends ScheduleItem {
   actions: string
+}
+
+export interface ScheduleConfigRequest {
+  jobName: string;
+  jobGroup: string;
+  triggerName: string;
+  startAt?: string;
+  endAt?: string;
+  repeatCount?: number;
+  repeatIntervalInSeconds?: number;
+  cronExpression?: string;
+  triggerDataMap?: TriggerDataMap;
+}
+
+export interface ScheduleConfigRequestWithScheduleType extends ScheduleConfigRequest {
+  scheduleType: ScheduleType;
 }
