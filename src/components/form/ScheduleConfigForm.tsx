@@ -1,14 +1,16 @@
-import type { ScheduleConfigRequestWithScheduleType } from "@/types/schedule.ts";
-import { useQuery } from "@tanstack/react-query";
+import type {ScheduleConfigRequestWithScheduleType} from "@/types/schedule.ts";
+import {useQuery} from "@tanstack/react-query";
 import * as api from "@/api/scheduleApi.ts";
 import {Controller, type ErrorOption, useForm} from "react-hook-form";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, } from "@/components/ui/field"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import {Field, FieldDescription, FieldError, FieldGroup, FieldLabel,} from "@/components/ui/field"
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
+import {Input} from "@/components/ui/input.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import {z} from "zod";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {useEffect} from "react";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
+import {Info} from "lucide-react";
 
 const baseSchema = z.object({
     scheduleType: z.enum(["Simple", "Cron"]),
@@ -57,7 +59,7 @@ const scheduleSchema = baseSchema.superRefine((data, ctx) => {
 });
 
 function validateJobParams(
-    values: ScheduleConfigRequestWithScheduleType ,
+    values: ScheduleConfigRequestWithScheduleType,
     jobParams: { name: string; required?: boolean }[]
 ) {
     const errors: Record<string, ErrorOption> = {};
@@ -68,7 +70,7 @@ function validateJobParams(
         if (param.required && (!value || value.trim() === "")) {
             errors[`triggerDataMap.${param.name}`] = {
                 type: "manual",
-                message: `${param.name} is required`,
+                message: `${camelToTitle(param.name)} is required`,
             };
         }
     });
@@ -81,7 +83,7 @@ type ScheduleConfigFormProps = {
     onSubmit: (data: ScheduleConfigRequestWithScheduleType) => void;
 }
 
-const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProps) => {
+const ScheduleConfigForm = ({onSubmit: externalSubmit}: ScheduleConfigFormProps) => {
 
     const {
         handleSubmit,
@@ -110,26 +112,25 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
     const selectedJobGroup = watch("jobGroup");
     const selectedJobName = watch("jobName");
 
-    const { data: jobGroups } = useQuery({
+    const {data: jobGroups} = useQuery({
         queryKey: ['jobGroups'],
         queryFn: () => api.getAllJobGroups(),
         staleTime: 30 * 1000,
     })
 
-    const { data: jobNames } = useQuery({
+    const {data: jobNames} = useQuery({
         queryKey: ['jobNames', selectedJobGroup],
         queryFn: () => api.getJobNamesByGroup(selectedJobGroup),
         enabled: !!selectedJobGroup,
         staleTime: 30 * 1000,
     })
 
-    const { data: jobParams = [], isFetching: isFetchingJobParams } = useQuery({
+    const {data: jobParams = [], isFetching: isFetchingJobParams} = useQuery({
         queryKey: ['jobParams', selectedJobGroup, selectedJobName],
         queryFn: () => api.getExpectedJobParams(selectedJobGroup, selectedJobName),
         enabled: !!selectedJobGroup && !!selectedJobName,
         staleTime: 30 * 1000,
     })
-
 
 
     const onsubmit = (data: ScheduleConfigRequestWithScheduleType) => {
@@ -154,17 +155,18 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
 
 
     return (
-        <section className="w-full max-w-3xl">
-            <div>
-                <h1 className="text-2xl font-bold mb-3">Schedule Configuration</h1>
+        <section className="w-full">
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold mb-1">Schedule Configuration</h1>
                 <p className="text-sm text-muted-foreground">
                     Configure you schedule with simple or cron-based timing
                 </p>
             </div>
             <form onSubmit={handleSubmit(onsubmit)} id="form-rhf-input">
-                <FieldGroup>
-                    <Controller name="scheduleType" control={control} render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
+                <FieldGroup className="mb-8">
+                    <Controller name="scheduleType" control={control} render={({field, fieldState}) => (
+                        <Field className="md:w-1/2"
+                               data-invalid={fieldState.invalid}>
                             <FieldLabel htmlFor="sheduleType">
                                 Schedule Type
                             </FieldLabel>
@@ -177,7 +179,7 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                                     id="scheduleType"
                                     aria-invalid={fieldState.invalid}
                                 >
-                                    <SelectValue placeholder="Select" />
+                                    <SelectValue placeholder="Select"/>
                                 </SelectTrigger>
                                 <SelectContent position="item-aligned">
                                     <SelectItem value="Simple">Simple</SelectItem>
@@ -186,13 +188,13 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                             </Select>
 
                             {fieldState.invalid && (
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[fieldState.error]}/>
                             )}
                         </Field>
-                    )} />
+                    )}/>
                 </FieldGroup>
-                <FieldGroup>
-                    <Controller name="jobGroup" control={control} render={({ field, fieldState }) => (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <Controller name="jobGroup" control={control} render={({field, fieldState}) => (
                         <Field data-invalid={fieldState.invalid}>
                             <FieldLabel htmlFor="jobGroup">
                                 Job Group
@@ -206,9 +208,9 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                                     id="jobGroup"
                                     aria-invalid={fieldState.invalid}
                                 >
-                                    <SelectValue placeholder="Select" />
+                                    <SelectValue placeholder="Select"/>
                                 </SelectTrigger>
-                                <SelectContent position="item-aligned">
+                                <SelectContent position="item-aligned" onCloseAutoFocus={e => e.preventDefault()}>
                                     {
                                         jobGroups?.map((gp: string, idx: number) => (
                                             <SelectItem key={idx} value={gp}>{gp}</SelectItem>
@@ -218,11 +220,11 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                             </Select>
 
                             {fieldState.invalid && (
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[fieldState.error]}/>
                             )}
                         </Field>
-                    )} />
-                    <Controller name="jobName" control={control} render={({ field, fieldState }) => (
+                    )}/>
+                    <Controller name="jobName" control={control} render={({field, fieldState}) => (
                         <Field data-invalid={fieldState.invalid}>
                             <FieldLabel htmlFor="jobName">
                                 Job Name
@@ -236,9 +238,9 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                                     id="jobName"
                                     aria-invalid={fieldState.invalid}
                                 >
-                                    <SelectValue placeholder="Select" />
+                                    <SelectValue placeholder="Select"/>
                                 </SelectTrigger>
-                                <SelectContent position="item-aligned">
+                                <SelectContent position="item-aligned" onCloseAutoFocus={e => e.preventDefault()}>
                                     {
                                         jobNames?.map((name: string, idx: number) => (
                                             <SelectItem key={idx} value={name}>{name}</SelectItem>
@@ -248,11 +250,11 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                             </Select>
 
                             {fieldState.invalid && (
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[fieldState.error]}/>
                             )}
                         </Field>
-                    )} />
-                    <Controller name="triggerName" control={control} render={({ field, fieldState }) => (
+                    )}/>
+                    <Controller name="triggerName" control={control} render={({field, fieldState}) => (
                         <Field data-invalid={fieldState.invalid}>
                             <FieldLabel htmlFor="triggerName">
                                 Schedule Name
@@ -265,15 +267,15 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                                 autoComplete="off"
                             />
                             {fieldState.invalid && (
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[fieldState.error]}/>
                             )}
                         </Field>
-                    )} />
-                </FieldGroup>
+                    )}/>
+                </div>
                 <FieldGroup>
                     {selectedScheduleType === "Simple" && (
-                        <>
-                            <Controller name="startAt" control={control} render={({ field, fieldState }) => (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <Controller name="startAt" control={control} render={({field, fieldState}) => (
                                 <Field data-invalid={fieldState.invalid}>
                                     <FieldLabel htmlFor="startAt">
                                         Start At
@@ -287,11 +289,11 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                                         type="datetime-local"
                                     />
                                     {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} />
+                                        <FieldError errors={[fieldState.error]}/>
                                     )}
                                 </Field>
-                            )} />
-                            <Controller name="endAt" control={control} render={({ field, fieldState }) => (
+                            )}/>
+                            <Controller name="endAt" control={control} render={({field, fieldState}) => (
                                 <Field data-invalid={fieldState.invalid}>
                                     <FieldLabel htmlFor="endAt">
                                         End At
@@ -305,11 +307,11 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                                         type="datetime-local"
                                     />
                                     {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} />
+                                        <FieldError errors={[fieldState.error]}/>
                                     )}
                                 </Field>
-                            )} />
-                            <Controller name="repeatCount" control={control} render={({ field, fieldState }) => (
+                            )}/>
+                            <Controller name="repeatCount" control={control} render={({field, fieldState}) => (
                                 <Field data-invalid={fieldState.invalid}>
                                     <FieldLabel htmlFor="repeatCount">
                                         Repeat Count <i>If empty, it will be infinite!</i>
@@ -321,38 +323,39 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                                         placeholder=""
                                         autoComplete="off"
                                         type="number"
-                                        value={field.value as number} 
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} />
-                                    )}
-                                </Field>
-                            )} />
-                            <Controller name="repeatIntervalInSeconds" control={control} render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="repeatIntervalInSeconds">
-                                        Repeat Interval <strong>In Second!</strong>
-                                    </FieldLabel>
-                                    <Input
-                                        {...field}
-                                        id="repeatIntervalInSeconds"
-                                        aria-invalid={fieldState.invalid}
-                                        placeholder=""
-                                        autoComplete="off"
-                                        type="number"
                                         value={field.value as number}
                                     />
                                     {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} />
+                                        <FieldError errors={[fieldState.error]}/>
                                     )}
                                 </Field>
-                            )} />
-                        </>
+                            )}/>
+                            <Controller name="repeatIntervalInSeconds" control={control}
+                                        render={({field, fieldState}) => (
+                                            <Field data-invalid={fieldState.invalid}>
+                                                <FieldLabel htmlFor="repeatIntervalInSeconds">
+                                                    Repeat Interval <strong>In Second!</strong>
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id="repeatIntervalInSeconds"
+                                                    aria-invalid={fieldState.invalid}
+                                                    placeholder=""
+                                                    autoComplete="off"
+                                                    type="number"
+                                                    value={field.value as number}
+                                                />
+                                                {fieldState.invalid && (
+                                                    <FieldError errors={[fieldState.error]}/>
+                                                )}
+                                            </Field>
+                                        )}/>
+                        </div>
                     )}
                     {
                         selectedScheduleType === "Cron" && (
-                            <>
-                                <Controller name="cronExpression" control={control} render={({ field, fieldState }) => (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                <Controller name="cronExpression" control={control} render={({field, fieldState}) => (
                                     <Field data-invalid={fieldState.invalid}>
                                         <FieldLabel htmlFor="cronExpression">
                                             Cron Expression
@@ -366,11 +369,11 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                                             type="text"
                                         />
                                         {fieldState.invalid && (
-                                            <FieldError errors={[fieldState.error]} />
+                                            <FieldError errors={[fieldState.error]}/>
                                         )}
                                     </Field>
-                                )} />
-                                <Controller name="endAt" control={control} render={({ field, fieldState }) => (
+                                )}/>
+                                <Controller name="endAt" control={control} render={({field, fieldState}) => (
                                     <Field data-invalid={fieldState.invalid}>
                                         <FieldLabel htmlFor="endAt">
                                             End At
@@ -384,54 +387,77 @@ const ScheduleConfigForm = ({ onSubmit: externalSubmit }: ScheduleConfigFormProp
                                             type="datetime-local"
                                         />
                                         {fieldState.invalid && (
-                                            <FieldError errors={[fieldState.error]} />
+                                            <FieldError errors={[fieldState.error]}/>
                                         )}
                                     </Field>
-                                )} />
-                            </>
+                                )}/>
+                            </div>
                         )
                     }
                 </FieldGroup>
                 <FieldGroup>
+                    {jobParams.length > 0 && (
+                        <h3 className="text-lg font-medium border-b pb-2">Job Parameters</h3>
+                    )}
                     {jobParams.length === 0 && !isFetchingJobParams && (
-                        <p className="text-sm text-muted-foreground">No parameters required for this job.</p>
+                        <p className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-md">No parameters required
+                            for this job.</p>
                     )}
                     {isFetchingJobParams && (
-                        <p className="text-sm text-muted-foreground">Loading..............</p>
+                        <div className="flex items-center space-x-2 p-4 text-sm text-muted-foreground">
+                                    <span className="relative flex h-3 w-3">
+                                        <span
+                                            className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                                    </span>
+                            <span>Loading parameters...</span>
+                        </div>
                     )}
-                    {
-                        jobParams.map((param, index) => (
-                            <Controller key={index} name={`triggerDataMap.${param.name}`} control={control} defaultValue="" render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor={`${param.name}-${index}`}>
-                                        {camelToTitle(param.name)}
-                                    </FieldLabel>
-                                    <FieldDescription>
-                                        {param.description}
-                                    </FieldDescription>
-                                    <Input
-                                        {...field}
-                                        id={`${param.name}-${index}`}
-                                        aria-invalid={fieldState.invalid}
-                                        placeholder=""
-                                        autoComplete="off"
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError errors={[fieldState.error]} />
-                                    )}
-                                </Field>
-                            )} />
-                        ))
-                    }
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        {
+                            jobParams.map((param, index) => (
+                                <Controller key={index} name={`triggerDataMap.${param.name}`} control={control}
+                                            defaultValue="" render={({field, fieldState}) => (
+                                    <Field data-invalid={fieldState.invalid}>
+                                        <div className="flex gap-2">
+                                            <FieldLabel htmlFor={`${param.name}-${index}`}>
+                                                {camelToTitle(param.name)}
+                                            </FieldLabel>
+
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <Info size="15"/>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>{param.description}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+
+                                        </div>
+                                        <Input
+                                            {...field}
+                                            id={`${param.name}-${index}`}
+                                            aria-invalid={fieldState.invalid}
+                                            placeholder=""
+                                            autoComplete="off"
+                                        />
+                                        {fieldState.invalid && (
+                                            <FieldError errors={[fieldState.error]}/>
+                                        )}
+                                    </Field>
+                                )}/>
+                            ))
+                        }
+                    </div>
                 </FieldGroup>
-                <Field orientation="horizontal">
+                <div className="flex justify-end space-x-4 border-t bg-muted/20 px-6 py-4">
                     <Button type="button" variant="outline" onClick={() => reset()}>
                         Reset
                     </Button>
                     <Button type="submit" form="form-rhf-input">
-                        Save
+                        Save Configuration
                     </Button>
-                </Field>
+                </div>
             </form>
         </section>
     );
