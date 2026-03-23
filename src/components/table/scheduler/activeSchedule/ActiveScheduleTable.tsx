@@ -5,7 +5,6 @@ import {
   getFilteredRowModel,
   useReactTable
 } from "@tanstack/react-table";
-import {MOCK_SCHEDULE_DATA} from "@/data/schedule-data.ts";
 import {columns} from "@/components/table/scheduler/activeSchedule/ActiveScheduleColumns.tsx";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
 import {useState} from "react";
@@ -13,16 +12,17 @@ import {Input} from "@/components/ui/input.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
 import {DataTablePagination} from "@/components/table/DataTablePagination.tsx";
 import {useQuery} from "@tanstack/react-query";
+import {useActiveJobs} from "@/hooks/queries/useActiveJobs.ts";
 
 const ActiveScheduleTable = () => {
-  const data = MOCK_SCHEDULE_DATA;
+  const {data: activeSchedules = []} = useActiveJobs();
   // const jobNames = Array.from(new Set(data.map((item) => item.jobName)));
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data,
+    data: activeSchedules,
     columns: columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),

@@ -1,5 +1,5 @@
 import {scheduleClient} from "@/api/scheduleClient.ts";
-import type {JobParam, ScheduleConfigRequestWithScheduleType} from "@/types/schedule.ts";
+import type {JobParam, ScheduleConfigRequestWithScheduleType, ScheduleItem} from "@/types/schedule.ts";
 
 export const getAllJobGroups = async (): Promise<string[]> => {
     const path: string = import.meta.env.VITE_SCHEDULE_JOB_GROUP_PATH;
@@ -24,5 +24,11 @@ export const createSchedule = async (object: ScheduleConfigRequestWithScheduleTy
     const path: string = scheduleType === "Simple" ? import.meta.env.VITE_SCHEDULE_SIMPLE_CREATE_PATH : import.meta.env.VITE_SCHEDULE_CRON_CREATE_PATH
     console.log(path)
     const {data} = await scheduleClient.post<string>(path, JSON.stringify(request));
+    return data;
+}
+
+export const getAllActiveJobs = async (): Promise<ScheduleItem[]> => {
+    const path: string = import.meta.env.VITE_ACTIVE_SCHEDULE_PATH;
+    const {data} = await scheduleClient.get(path);
     return data;
 }

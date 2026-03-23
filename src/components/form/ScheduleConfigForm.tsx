@@ -12,6 +12,9 @@ import {Info} from "lucide-react";
 import {useJobGroups} from "@/hooks/queries/useJobGroups.ts";
 import {useJobNames} from "@/hooks/queries/useJobNames.ts";
 import {useJobParams} from "@/hooks/queries/useJobParams.ts";
+import {useCreateSchedule} from "@/hooks/queries/useScheduleMutations.ts";
+import {toast} from "sonner";
+import type {AxiosError} from "axios";
 
 const baseSchema = z.object({
     scheduleType: z.enum(["Simple", "Cron"]),
@@ -79,12 +82,12 @@ function validateJobParams(
     return errors;
 }
 
+//
+// type ScheduleConfigFormProps = {
+//     onSubmit: (data: ScheduleConfigRequestWithScheduleType) => void;
+// }
 
-type ScheduleConfigFormProps = {
-    onSubmit: (data: ScheduleConfigRequestWithScheduleType) => void;
-}
-
-const ScheduleConfigForm = ({onSubmit: externalSubmit}: ScheduleConfigFormProps) => {
+const ScheduleConfigForm = () => {
 
     const {
         handleSubmit,
@@ -117,6 +120,7 @@ const ScheduleConfigForm = ({onSubmit: externalSubmit}: ScheduleConfigFormProps)
     const {data: jobNames} = useJobNames(selectedJobGroup);
     const {data: jobParams = [], isFetching: isFetchingJobParams} = useJobParams(selectedJobGroup, selectedJobName);
 
+    const {mutate: createSchedule} = useCreateSchedule();
 
     const onsubmit = (data: ScheduleConfigRequestWithScheduleType) => {
         const paramErrors = validateJobParams(data, jobParams);
@@ -128,8 +132,21 @@ const ScheduleConfigForm = ({onSubmit: externalSubmit}: ScheduleConfigFormProps)
             return;
         }
 
-        externalSubmit(data as ScheduleConfigRequestWithScheduleType);
-        reset()
+        createSchedule(data, {
+            onSuccess: () => {
+                toast.success("Schedule has been created successfully.", {
+                    position: "bottom-right",
+                })
+                reset()
+            },
+            onError: (err: AxiosError<string>) => {
+                const errorMessage = JSON.stringify(err.response?.data);
+                console.log(errorMessage)
+                toast.error(errorMessage, {
+                    position: "bottom-right",
+                })
+            }
+        })
     };
 
     useEffect(() => {
