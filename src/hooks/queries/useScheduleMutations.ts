@@ -25,7 +25,6 @@ export const useCreateSchedule = () => {
                 || error.message
                 || "An unexpected error occurred";
             console.error("Failed to create schedule:", errorMessage);
-            return errorMessage;
         }
     })
 };

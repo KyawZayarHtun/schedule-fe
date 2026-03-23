@@ -27,7 +27,7 @@ const baseSchema = z.object({
     startAt: z.string().optional(),
     endAt: z.string().optional(),
     repeatCount: z.coerce.number().int().min(0).optional(),
-    repeatIntervalInSeconds: z.coerce.number().int().min(60).optional(),
+    repeatIntervalInSeconds: z.coerce.number().int().optional(),
     cronExpression: z.string().optional(),
 
     triggerDataMap: z.record(z.string(), z.string()).default({}),
@@ -47,6 +47,14 @@ const scheduleSchema = baseSchema.superRefine((data, ctx) => {
                 code: "custom",
                 path: ["repeatIntervalInSeconds"],
                 message: "Repeat interval is required",
+            });
+        }
+
+        if (data.repeatIntervalInSeconds && data.repeatIntervalInSeconds < 60) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["repeatIntervalInSeconds"],
+                message: "Repeat interval must be over 60 seconds",
             });
         }
     }
@@ -119,15 +127,13 @@ const ScheduleConfigForm = () => {
 
     const onsubmit = (data: ScheduleConfigRequestWithScheduleType) => {
         const paramErrors = validateJobParams(data, jobParams);
-        console.log("submit")
+
         if (Object.keys(paramErrors).length > 0) {
             Object.entries(paramErrors).forEach(([path, err]) => {
                 setError(path as Parameters<typeof setError>[0], err);
             });
             return;
         }
-
-        console.log("submit1")
 
         createSchedule(data, {
             onSuccess: () => {
@@ -137,9 +143,7 @@ const ScheduleConfigForm = () => {
                 reset()
             },
             onError: (err: AxiosError<string>) => {
-                const errorMessage = err.response?.data
-                    || err.message
-                    || "An unexpected error occurred";
+                const errorMessage = JSON.stringify(err.response?.data)
                 console.log(errorMessage)
                 toast.error(errorMessage, {
                     position: "bottom-right",
