@@ -1,4 +1,4 @@
-import type {ScheduleItem} from "@/types/schedule.ts";
+import type {ScheduleItem, TriggerActionsProps, TriggerActionsType} from "@/types/schedule.ts";
 import {Button} from "@/components/ui/button.tsx";
 import {Eye, MoreHorizontalIcon, Pause, Play, Trash2} from "lucide-react";
 import {useState} from "react";
@@ -18,9 +18,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu.tsx";
+import {usePauseSchedule} from "@/hooks/queries/usePauseScheduleMutations.ts";
+import {useResumeSchedule} from "@/hooks/queries/useResumeScheduleMutations.ts";
+import {useDeleteSchedule} from "@/hooks/queries/useDeleteScheduleMutations.ts";
+import {toast} from "sonner";
+import type {AxiosError} from "axios";
 
-
-type TriggerActionsType = "RESUME" | "PAUSE" | "DELETE" | null;
 
 const ActiveScheduleActions = ({row}: { row: ScheduleItem }) => {
   const [isViewDetail, setIsViewDetail] = useState(false);
@@ -33,6 +36,71 @@ const ActiveScheduleActions = ({row}: { row: ScheduleItem }) => {
   const openConfirmationBox = (action: TriggerActionsType) => {
     setIsAlertOpen(true);
     setTriggerActionType(action);
+  }
+
+  const {mutate: pauseSchedule} = usePauseSchedule();
+  const {mutate: resumeSchedule} = useResumeSchedule();
+  const {mutate: deleteSchedule} = useDeleteSchedule();
+
+  function handleTriggerAction(props: TriggerActionsProps) {
+      console.log("Trigger Type", props.actionType);
+      console.log("Trigger Group", props.triggerGroup);
+      console.log("Trigger Name", props.triggerName)
+
+
+      switch (props.actionType) {
+          case "PAUSE": {
+              pauseSchedule(props, {
+                  onSuccess: (data) => {
+                      console.log(data)
+                      toast.success(`Schedule has been Pause successfully.`, {
+                          position: "bottom-right",
+                      })
+                  },
+                  onError: (err: AxiosError<string>) => {
+
+                      console.log(err.message)
+                      toast.error(err.message, {
+                          position: "bottom-right",
+                      })
+                  }
+              })
+              break;
+          }
+          case "RESUME": {
+              resumeSchedule(props, {
+                  onSuccess: () => {
+                      toast.success(`Schedule has been Resume successfully.`, {
+                          position: "bottom-right",
+                      })
+                  },
+                  onError: (err: AxiosError<string>) => {
+                      console.log(err.message)
+                      toast.error(err.message, {
+                          position: "bottom-right",
+                      })
+                  }
+              })
+              break;
+          }
+          case "DELETE": {
+              deleteSchedule(props, {
+                  onSuccess: () => {
+                      toast.success(`Schedule has been Resume successfully.`, {
+                          position: "bottom-right",
+                      })
+                  },
+                  onError: (err: AxiosError<string>) => {
+                      console.log(err.message)
+                      toast.error(err.message, {
+                          position: "bottom-right",
+                      })
+                  }
+              })
+              break;
+          }
+
+      }
   }
 
   return (
@@ -236,20 +304,9 @@ function ViewDetail({schedule, isViewDetail, onToggle}: DetailProps) {
   )
 }
 
-interface TriggerActionsProps {
-  actionType: TriggerActionsType;
-  triggerName: string;
-  triggerGroup: string;
-}
 
-function handleTriggerAction(props: TriggerActionsProps) {
-  console.log("Trigger Type", props.actionType);
-  console.log("Trigger Group", props.triggerGroup);
-  console.log("Trigger Name", props.triggerName)
 
-  return (
-    <>
-    </>
-  )
-}
+
+
+
 export default ActiveScheduleActions;

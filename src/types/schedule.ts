@@ -55,3 +55,12 @@ export interface ScheduleConfigRequest {
 export interface ScheduleConfigRequestWithScheduleType extends ScheduleConfigRequest {
   scheduleType: ScheduleType;
 }
+
+export type TriggerActionsType = "RESUME" | "PAUSE" | "DELETE" | null;
+
+
+export interface TriggerActionsProps {
+  actionType: TriggerActionsType;
+  triggerName: string;
+  triggerGroup: string;
+}

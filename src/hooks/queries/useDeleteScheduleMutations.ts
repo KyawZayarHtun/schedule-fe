@@ -1,30 +1,31 @@
 import {useMutation, useQueryClient} from "@tanstack/react-query";
-import type {ScheduleConfigRequestWithScheduleType} from "@/types/schedule.ts";
+import type {TriggerActionsProps} from "@/types/schedule.ts";
 import * as api from "@/api/scheduleApi.ts";
 import type {AxiosError} from "axios";
 import {ACTIVE_JOBS} from "@/hooks/queries/useActiveJobs.ts";
 
 
 // export const SCHEDULE_KEYS = {
-//     create: ["create-schedule"] as const
+//     create: ["delete-schedule"] as const
 // };
 
-export const useCreateSchedule = () => {
+export const useDeleteSchedule = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (data: ScheduleConfigRequestWithScheduleType) => {
-            return api.createSchedule(data)
+        mutationFn: (data: TriggerActionsProps) => {
+            return api.deleteSchedule(data)
         },
         onSuccess: (data: string) => {
             console.log(data)
             return queryClient.invalidateQueries({ queryKey: [ACTIVE_JOBS] });
+
         },
         onError: (error: AxiosError<string>) => {
             const errorMessage = error.response?.data
                 || error.message
                 || "An unexpected error occurred";
-            console.error("Failed to create schedule:", errorMessage);
+            console.error("Failed to delete schedule:", errorMessage);
             return errorMessage;
         }
     })

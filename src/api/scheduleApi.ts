@@ -1,5 +1,10 @@
 import {scheduleClient} from "@/api/scheduleClient.ts";
-import type {JobParam, ScheduleConfigRequestWithScheduleType, ScheduleItem} from "@/types/schedule.ts";
+import type {
+    JobParam,
+    ScheduleConfigRequestWithScheduleType,
+    ScheduleItem,
+    TriggerActionsProps
+} from "@/types/schedule.ts";
 
 export const getAllJobGroups = async (): Promise<string[]> => {
     const path: string = import.meta.env.VITE_SCHEDULE_JOB_GROUP_PATH;
@@ -24,6 +29,39 @@ export const createSchedule = async (object: ScheduleConfigRequestWithScheduleTy
     const path: string = scheduleType === "Simple" ? import.meta.env.VITE_SCHEDULE_SIMPLE_CREATE_PATH : import.meta.env.VITE_SCHEDULE_CRON_CREATE_PATH
     console.log(path)
     const {data} = await scheduleClient.post<string>(path, JSON.stringify(request));
+    return data;
+}
+
+export const pauseSchedule = async (object: TriggerActionsProps): Promise<string> => {
+    const request = {
+        name: object.triggerName,
+        group: object.triggerGroup,
+    }
+    const path: string = import.meta.env.VITE_PAUSE_SCHEDULE_PATH;
+    console.log(path)
+    const {data} = await scheduleClient.post<string>(path, JSON.stringify(request));
+    return data;
+}
+
+export const resumeSchedule = async (object: TriggerActionsProps): Promise<string> => {
+    const request = {
+        name: object.triggerName,
+        group: object.triggerGroup,
+    }
+    const path: string = import.meta.env.VITE_RESUME_SCHEDULE_PATH;
+    console.log(path)
+    const {data} = await scheduleClient.post<string>(path, JSON.stringify(request));
+    return data;
+}
+
+export const deleteSchedule = async (object: TriggerActionsProps): Promise<string> => {
+    const path: string = `${import.meta.env.VITE_DELETE_SCHEDULE_PATH}/${object.triggerGroup}`;
+    console.log(path)
+    const {data} = await scheduleClient.delete<string>(path, {
+        params: {
+            name: object.triggerName
+        }
+    });
     return data;
 }
 

@@ -82,11 +82,6 @@ function validateJobParams(
     return errors;
 }
 
-//
-// type ScheduleConfigFormProps = {
-//     onSubmit: (data: ScheduleConfigRequestWithScheduleType) => void;
-// }
-
 const ScheduleConfigForm = () => {
 
     const {
@@ -124,13 +119,15 @@ const ScheduleConfigForm = () => {
 
     const onsubmit = (data: ScheduleConfigRequestWithScheduleType) => {
         const paramErrors = validateJobParams(data, jobParams);
-
+        console.log("submit")
         if (Object.keys(paramErrors).length > 0) {
             Object.entries(paramErrors).forEach(([path, err]) => {
                 setError(path as Parameters<typeof setError>[0], err);
             });
             return;
         }
+
+        console.log("submit1")
 
         createSchedule(data, {
             onSuccess: () => {
@@ -140,7 +137,9 @@ const ScheduleConfigForm = () => {
                 reset()
             },
             onError: (err: AxiosError<string>) => {
-                const errorMessage = JSON.stringify(err.response?.data);
+                const errorMessage = err.response?.data
+                    || err.message
+                    || "An unexpected error occurred";
                 console.log(errorMessage)
                 toast.error(errorMessage, {
                     position: "bottom-right",
