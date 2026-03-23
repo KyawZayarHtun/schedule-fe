@@ -1,8 +1,6 @@
 import type {ScheduleConfigRequestWithScheduleType} from "@/types/schedule.ts";
-import {useQuery} from "@tanstack/react-query";
-import * as api from "@/api/scheduleApi.ts";
 import {Controller, type ErrorOption, useForm} from "react-hook-form";
-import {Field, FieldDescription, FieldError, FieldGroup, FieldLabel,} from "@/components/ui/field"
+import {Field, FieldError, FieldGroup, FieldLabel,} from "@/components/ui/field"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
@@ -11,6 +9,9 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import {useEffect} from "react";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {Info} from "lucide-react";
+import {useJobGroups} from "@/hooks/queries/useJobGroups.ts";
+import {useJobNames} from "@/hooks/queries/useJobNames.ts";
+import {useJobParams} from "@/hooks/queries/useJobParams.ts";
 
 const baseSchema = z.object({
     scheduleType: z.enum(["Simple", "Cron"]),
@@ -112,25 +113,9 @@ const ScheduleConfigForm = ({onSubmit: externalSubmit}: ScheduleConfigFormProps)
     const selectedJobGroup = watch("jobGroup");
     const selectedJobName = watch("jobName");
 
-    const {data: jobGroups} = useQuery({
-        queryKey: ['jobGroups'],
-        queryFn: () => api.getAllJobGroups(),
-        staleTime: 30 * 1000,
-    })
-
-    const {data: jobNames} = useQuery({
-        queryKey: ['jobNames', selectedJobGroup],
-        queryFn: () => api.getJobNamesByGroup(selectedJobGroup),
-        enabled: !!selectedJobGroup,
-        staleTime: 30 * 1000,
-    })
-
-    const {data: jobParams = [], isFetching: isFetchingJobParams} = useQuery({
-        queryKey: ['jobParams', selectedJobGroup, selectedJobName],
-        queryFn: () => api.getExpectedJobParams(selectedJobGroup, selectedJobName),
-        enabled: !!selectedJobGroup && !!selectedJobName,
-        staleTime: 30 * 1000,
-    })
+    const {data: jobGroups} = useJobGroups();
+    const {data: jobNames} = useJobNames(selectedJobGroup);
+    const {data: jobParams = [], isFetching: isFetchingJobParams} = useJobParams(selectedJobGroup, selectedJobName);
 
 
     const onsubmit = (data: ScheduleConfigRequestWithScheduleType) => {
@@ -144,6 +129,7 @@ const ScheduleConfigForm = ({onSubmit: externalSubmit}: ScheduleConfigFormProps)
         }
 
         externalSubmit(data as ScheduleConfigRequestWithScheduleType);
+        reset()
     };
 
     useEffect(() => {

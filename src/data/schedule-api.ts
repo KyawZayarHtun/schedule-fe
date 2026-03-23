@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type {ScheduleConfigRequest} from "@/types/schedule.ts";
 
 // --- Types based on your JSON ---
 export type FieldDefinition = {
@@ -45,7 +46,7 @@ export const fetchTriggerDefinitions = async (group: string, job: string) => {
   return MOCK_DEFINITIONS[key] || [];
 };
 
-export const createSchedule = async (data: any) => {
+export const createSchedule = async (data: ScheduleConfigRequest) => {
   await new Promise((r) => setTimeout(r, 1000));
   console.log("Submitting Payload:", JSON.stringify(data, null, 2));
   return { success: true };
