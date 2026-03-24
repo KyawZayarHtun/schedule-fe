@@ -96,6 +96,7 @@ const ScheduleConfigForm = () => {
         handleSubmit,
         watch,
         control,
+        setValue,
         reset,
         setError,
     } = useForm({
@@ -118,6 +119,15 @@ const ScheduleConfigForm = () => {
     const selectedScheduleType = watch("scheduleType");
     const selectedJobGroup = watch("jobGroup");
     const selectedJobName = watch("jobName");
+    useEffect(() => {
+        // This will run every time selectedScheduleType changes
+        setValue("triggerDataMap", {}, {
+            shouldValidate: true,
+            shouldDirty: true
+        });
+
+        console.log("job Name changed; triggerDataMap has been reset.");
+    }, [selectedJobName,  setValue]);
 
     const {data: jobGroups} = useJobGroups();
     const {data: jobNames} = useJobNames(selectedJobGroup);
